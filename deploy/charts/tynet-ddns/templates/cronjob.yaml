@@ -1,0 +1,39 @@
+# One check-and-maybe-update pass per run; no restart-on-secret-rotation
+# plumbing needed (unlike a long-running Deployment) — each new Job picks
+# up whatever the Secret currently holds at start.
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "tynet-ddns.fullname" . }}
+  labels: {{- include "tynet-ddns.labels" . | nindent 4 }}
+spec:
+  schedule: {{ .Values.schedule | quote }}
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels: {{- include "tynet-ddns.selectorLabels" . | nindent 12 }}
+        spec:
+          restartPolicy: Never
+          securityContext: {{- toYaml .Values.podSecurityContext | nindent 12 }}
+          containers:
+            - name: tynet-ddns
+              image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+              imagePullPolicy: {{ .Values.image.pullPolicy }}
+              env:
+                - name: CF_ZONE_ID
+                  value: {{ .Values.cloudflare.zoneId | quote }}
+                - name: CF_RECORD_ID
+                  value: {{ .Values.cloudflare.recordId | quote }}
+                {{- range $name, $ref := .Values.env }}
+                - name: {{ $name }}
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ $ref.secret }}
+                      key: {{ $ref.key }}
+                {{- end }}
+              securityContext: {{- toYaml .Values.securityContext | nindent 16 }}
+              resources: {{- toYaml .Values.resources | nindent 16 }}

@@ -1,0 +1,6 @@
+apiVersion: v2
+name: tynet-ddns
+description: Keeps tynet.us's Cloudflare A record pointed at the current public IP
+type: application
+version: 0.1.0
+appVersion: "0.1.0"

@@ -1,0 +1,20 @@
+{{ .Chart.Name }} {{ .Chart.Version }} installed as {{ .Release.Name }} in {{ .Release.Namespace }}.
+
+Watch it come up:
+
+  microk8s kubectl -n {{ .Release.Namespace }} get cronjob,onepassworditem,secret
+
+If the Secret never appears, the OnePasswordItem hasn't resolved yet —
+almost always one of:
+
+  - the ddns-onepassword-operator Application hasn't synced yet (it must
+    come up before this one)
+  - the item is still missing from the tynet-ddns vault
+  - the service account wasn't granted the tynet-ddns vault
+
+  microk8s kubectl -n {{ .Release.Namespace }} logs deploy/onepassword-connect-operator --tail=20
+
+Trigger a run right now instead of waiting for the schedule:
+
+  microk8s kubectl -n {{ .Release.Namespace }} create job --from=cronjob/{{ include "tynet-ddns.fullname" . }} manual-test
+  microk8s kubectl -n {{ .Release.Namespace }} logs job/manual-test

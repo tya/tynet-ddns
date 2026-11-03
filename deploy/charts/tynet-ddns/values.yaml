@@ -1,0 +1,49 @@
+# One CronJob, no internal scheduling loop in the binary itself — k8s does
+# the scheduling. No Service/Certificate/PVC: stateless, no inbound port.
+
+image:
+  repository: ghcr.io/tya/tynet-ddns
+  # Bump on release (matches the `v*` git tag pushed to ghcr.io by
+  # .github/workflows/image.yml), commit, let Argo pick it up.
+  tag: v0.1.0
+  pullPolicy: IfNotPresent
+
+# tynet.us's apex A record. Not secret — just config, confirmed once via
+# the Cloudflare API (zones?name=tynet.us, then dns_records?type=A).
+cloudflare:
+  zoneId: 2d6ef520d7c0a49eb67e671436b0afdb
+  recordId: 346ba956c753e1f02e3023ba8647029c
+
+# Dynamic DNS wants to notice a change quickly, but Cloudflare free-tier
+# rate limits are generous enough that 5 minutes costs nothing.
+schedule: "*/5 * * * *"
+
+onePassword:
+  # A service account cannot read a personal vault, so this is never
+  # "Private" — and deliberately not "tynet" either (meal-planner's vault):
+  # this app gets its own vault, its own narrowly-scoped service account,
+  # and its own operator instance (see gitops/ddns-onepassword-operator in
+  # tynet-infra), so a compromised ddns Secret can't expose anything
+  # meal-planner uses, or vice versa.
+  vault: tynet-ddns
+  items:
+    cf-credentials: cloudflare.ddns
+  autoRestart: true
+
+env:
+  CF_API_TOKEN: { secret: cf-credentials, key: token }
+
+resources:
+  requests: { cpu: 10m, memory: 16Mi }
+  limits: { cpu: 100m, memory: 64Mi }
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 65532
+  runAsGroup: 65532
+  seccompProfile: { type: RuntimeDefault }
+
+securityContext:
+  readOnlyRootFilesystem: true
+  allowPrivilegeEscalation: false
+  capabilities: { drop: ["ALL"] }
