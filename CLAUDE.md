@@ -24,7 +24,7 @@ cluster-side beyond that chart.
   zone/record names via the API on every run the way a multi-domain tool
   would.
 - **`CF_API_TOKEN` is the only secret**, delivered via a 1Password
-  `OnePasswordItem` → a dedicated vault (`tynet-ddns`) → a narrowly-scoped
+  `OnePasswordItem` → a dedicated vault (`cloudflare`) → a narrowly-scoped
   Service Account → its own 1Password Kubernetes Operator instance,
   isolated from every other app in that cluster (see `tya/tynet-infra`'s
   `gitops/ddns-onepassword-operator`). Don't widen that vault's scope or
