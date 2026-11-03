@@ -25,7 +25,7 @@ onePassword:
   # and its own operator instance (see gitops/ddns-onepassword-operator in
   # tynet-infra), so a compromised ddns Secret can't expose anything
   # meal-planner uses, or vice versa.
-  vault: tynet-ddns
+  vault: cloudflare # dedicated 1Password vault, not shared with any other app
   items:
     cf-credentials: cloudflare.ddns
   autoRestart: true
