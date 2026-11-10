@@ -27,7 +27,7 @@ onePassword:
   # meal-planner uses, or vice versa.
   vault: cloudflare # dedicated 1Password vault, not shared with any other app
   items:
-    cf-credentials: cloudflare.ddns
+    cf-credentials: CLOUDFLARE_DDNS
   autoRestart: true
 
 env:
